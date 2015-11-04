@@ -27,41 +27,41 @@ buf *getblk(int blknum){
     if(buffer != NULL){
       assert(buffer != NULL);
       if(IsStatus(buffer, STAT_LOCKED)){
-	//sleep();
-	printf("SCENARIO 5\n");
-	printf("Process goes to sleep\n");
-	AddStatus(buffer, STAT_WAITED);
-	return NULL;
-	continue;
+        //sleep();
+        printf("SCENARIO 5\n");
+        printf("Process goes to sleep\n");
+        AddStatus(buffer, STAT_WAITED);
+        return NULL;
+        continue;
       }
       //scenario 1
       printf("SCENARIO 1\n");
       MakeStatus(buffer, (STAT_LOCKED | STAT_VALID));
       RemFromFreeList(buffer);
-      return buffer;	
+      return buffer;    
     }
     else{
       //if(IsInFreeList(buffer)){
       if(IsEmptyFree()){
-	//scenario 4
-	//sleep();
-	printf("SCENARIO 4\n");
-	printf("Process goes to sleep\n");
-	brelse(buffer);
-	continue;
+        //scenario 4
+        //sleep();
+        printf("SCENARIO 4\n");
+        printf("Process goes to sleep\n");
+        brelse(buffer);
+        continue;
       }
       //RemFromFreeList(buffer);
       //RemoveFromFree()
       buf *ref = ref_free_head();
       if(CheckStatus(ref, STAT_DWR)){
-	//scenario 3
-	printf("SCENARIO 3\n");	//asynchronous write buffer to disk;
-	buf *prev = ref -> free_bp;
-	buf *next = ref -> free_fp;
-	prev -> free_fp = next;
-	next -> free_bp = prev;
-	MakeStatus(ref, STAT_LOCKED | STAT_VALID | STAT_DWR | STAT_OLD);
-	continue;
+        //scenario 3
+        printf("SCENARIO 3\n"); //asynchronous write buffer to disk;
+        buf *prev = ref -> free_bp;
+        buf *next = ref -> free_fp;
+        prev -> free_fp = next;
+        next -> free_bp = prev;
+        MakeStatus(ref, STAT_LOCKED | STAT_VALID | STAT_DWR | STAT_OLD);
+        continue;
       }
       //scenario 2
       printf("SCENARIO 2\n");

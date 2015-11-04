@@ -1,3 +1,6 @@
+//61113749
+//Kazuki Tanaka
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,6 +10,8 @@
 #include "state.h"
 #include "getblk.h"
 #include <assert.h>
+
+#define USER_STRING_LIM 100
 
 void help_proc(int, char *[]);
 void init_proc(int, char *[]);
@@ -35,12 +40,13 @@ void SetStatus(buf *h, int stat);
 void ResetStatus(buf *h, int stat);
 void PrintRoutine(buf *p, int index);
 buf *Clone(int blkno);
-struct command_table{
+
+typedef struct cmd_struct {
   char *cmd;
   void (*func)(int, char *[]);
-};
+} cmd_struct_t;
 
-struct command_table cmd_tbl[] = 
+cmd_struct_t cmd_tbl[] =
 {
   {"help", help_proc},
   {"init", init_proc},
@@ -60,6 +66,34 @@ checker_t setbit = 1;
 checker_t malloced = 0;
 checker_t initnum = 0;
 
+int main(int argc, char *argv[]){
+  char user_string[USER_STRING_LIM];
+  while(setbit){
+    printf("$ ");
+    if(fgets(user_string, USER_STRING_LIM, stdin) == NULL){
+      printf("command not found:%s\n", user_string);
+      exit(1);
+    }
+    cmd_struct_t *p;
+    int ac = 0;
+    char *av[16];
+    ac = parseline(user_string, av);
+    if(!ac){
+      continue;
+    }
+    for(p = cmd_tbl; p -> cmd; p++){
+      if(strcmp(av[0], p -> cmd) == 0){
+        (*p -> func)(ac, av);
+        free(av[0]);
+        break;
+      }
+    }
+    if(p -> cmd == NULL){
+      fprintf(stderr, "command not found: %s\n", av[0]);
+    }
+  }
+}
+
 int parseline(char *cmdline, char **av){
   //char array[100];
    char *buffer = calloc(100, sizeof(char));
@@ -74,7 +108,7 @@ int parseline(char *cmdline, char **av){
     buffer++;
   }
   argc = 0;
- 
+
   delim = strchr(buffer, ' ');
 
   while(delim){
@@ -100,38 +134,7 @@ int parseline(char *cmdline, char **av){
     }
   }
   //*buf = 1;
-  return argc;  
-}
-
-//61101233
-//Takashi Ikeuchi
-//I am Takashi Ikeuchi, bitch!
-int main(int argc, char *argv[]){
-  char cmdline[100];
-  while(setbit){
-    printf("$ ");
-    if(fgets(cmdline, 100, stdin) == NULL){
-      printf("Oops something is wrong in reading char from commad\n");
-      exit(1);
-    }
-    struct command_table *p;
-    int ac = 0;
-    char *av[16];
-    ac = parseline(cmdline, av);
-    if(!ac){
-      continue;
-    }
-    for(p = cmd_tbl; p -> cmd; p++){
-      if(strcmp(av[0], p -> cmd) == 0){
-	(*p -> func)(ac, av);
-	free(av[0]);
-	break;
-      }
-    }
-    if(p -> cmd == NULL){
-      fprintf(stderr, "unknown cmmand: %s\n", av[0]);
-    }
-  }
+  return argc;
 }
 
 void help_proc(int num, char *name[]){
@@ -154,10 +157,10 @@ void help_proc(int num, char *name[]){
   //free
   printf("free\n");
   printf("\tDisplay free list\n\n");
-  //getblk 
+  //getblk
   printf("getblk n\n");
   printf("\ttake the blkno from the user, execute getblk(n)\n\n");
-  //brelse  
+  //brelse
   printf("brelse n\n");
   printf("\ttake the blkno from the user, execute brelse(bp), \n");
   printf("\twhere bp is the pointer to buffer header with blkno = n");
@@ -178,15 +181,15 @@ void init_proc(int ac, char *av[]){
     for(int i = 0; i < NHASH; i++){
       //buf *trac = &h_head[i];
       while(!IsEmpty(i)){
-	buf *ret = remove_hash_head();
-	free(ret);	
+        buf *ret = remove_hash_head();
+        free(ret);
       }
       /*
       free(h_head[i].hash_fp -> hash_fp -> hash_fp);
       free(h_head[i].hash_fp -> hash_fp);
       free(h_head[i].hash_fp);
       */
-    }    
+    }
     initnum--;
   }
   malloced = 1;
@@ -203,18 +206,18 @@ void init_proc(int ac, char *av[]){
     buf *q = malloc(sizeof(buf));
     buf *r = malloc(sizeof(buf));
     if(p == NULL || q == NULL || r == NULL){
-	printf("unable to assign memory\n");
-	abort();
+        printf("unable to assign memory\n");
+        abort();
       }
       assert(p != NULL && q != NULL && r != NULL);
-    
+
     insert_list(&h_head[i], p, HASHHEAD);
     insert_list(h_head[i].hash_fp, q, HASHHEAD);
     insert_list(((h_head[i].hash_fp) -> hash_fp), r, HASHHEAD);
   }
   /*
   buf *freebuffer = malloc(sizeof(buf));
-  //f_head.free_fp 
+  //f_head.free_fp
   freebuffer -> free_fp = freebuffer;
   freebuffer -> free_bp = freebuffer;
   freebuffer -> hash_fp = NULL;
@@ -306,17 +309,17 @@ void buf_proc(int ac, char *av[]){
       char array[100];
       strncpy(array, av[i], 100);
       if(!isalpha((array[0]))){
-	if(0 <= atoi(array) && atoi(array) <= 11){
-	  PrintBufferOne(atoi(array));
-	  printf("\n");
-	}
-	else{
-	  printf("buffer number must be within 0 ~ 11\n");
-	}
+        if(0 <= atoi(array) && atoi(array) <= 11){
+          PrintBufferOne(atoi(array));
+          printf("\n");
+        }
+        else{
+          printf("buffer number must be within 0 ~ 11\n");
+        }
       }
       else{
-	printf("INPUT VALUE MUST BE NUMBER, ASS WHOLE\n");
-	printf("NOTHING PRINTED FOR THIS SHITTY REQUEST\n");
+        printf("INPUT VALUE MUST BE NUMBER, ASS WHOLE\n");
+        printf("NOTHING PRINTED FOR THIS SHITTY REQUEST\n");
       }
     }
   }
@@ -333,16 +336,16 @@ void hash_proc(int ac, char *av[]){
   else{
     for(int i = 1; i < ac; i++){
       if(!isalpha((av[i][0]))){
-	if(0 <= atoi(av[i]) && atoi(av[i]) <= 3){
-	  PrintHashLine(atoi(av[i]));
-	}
-	else{
-	  printf("INPUT VALUE MUST BE WITHIN 0 ~ 3, DUSHBAG\n");
-	  printf("NOTHING PRINTED FOR THIS SHITTY REQUEST\n");
-	}
+        if(0 <= atoi(av[i]) && atoi(av[i]) <= 3){
+          PrintHashLine(atoi(av[i]));
+        }
+        else{
+          printf("INPUT VALUE MUST BE WITHIN 0 ~ 3, DUSHBAG\n");
+          printf("NOTHING PRINTED FOR THIS SHITTY REQUEST\n");
+        }
       }
       else{
-	printf("YOU SHIT NUMBER PLEASE\n");
+        printf("YOU SHIT NUMBER PLEASE\n");
       }
     }
   }
@@ -428,13 +431,13 @@ void set_proc(int ac, char *av[]){
     int blkno = atoi((av[1]));
     if(!isalpha(blkno)){
       if(1 <= blkno && blkno <=12){
-	if(buffer == NULL){
-	  printf("invaid cannot get buffer\n");
-	}
-	buffer -> stat = buffer -> stat | state;
+        if(buffer == NULL){
+          printf("invaid cannot get buffer\n");
+        }
+        buffer -> stat = buffer -> stat | state;
       }
       else{
-	printf("Errror input value for block number should be within 1~12\n");
+        printf("Errror input value for block number should be within 1~12\n");
       }
     }
     else{
@@ -463,12 +466,12 @@ void reset_proc(int ac, char *av[]){
     if(!isalpha(av[1][0])){
       //if(1 <= blkno && blkno <=12){
       if(buffer == NULL){
-	printf("invaid cannot get buffer\n");
+        printf("invaid cannot get buffer\n");
       }
-	//int midstate = (buffer -> stat) & state;
-	//buffer -> stat = buffer -> stat & midstate;
+        //int midstate = (buffer -> stat) & state;
+        //buffer -> stat = buffer -> stat & midstate;
       buffer -> stat = buffer -> stat ^ state;
-    
+
       //  else{
       //printf("Errror input value for block number should be within 1~12\n");
       //}
@@ -484,16 +487,16 @@ void quit_proc(int ac, char *av[]){
     for(int i = 0; i < NHASH; i++){
       //buf *trac = &h_head[i];
       while(!IsEmpty(i)){
-	buf *ret = remove_hash_head();
-	free(ret);	
+        buf *ret = remove_hash_head();
+        free(ret);
       }
       //free(h_head[i].hash_fp -> hash_fp -> hash_fp);
       //free(h_head[i].hash_fp -> hash_fp);
       //free(h_head[i].hash_fp);
-    } 
+    }
   }
   setbit = 0;
-  return;  
+  return;
 }
 
 void PrintState(buf *p){
@@ -542,25 +545,25 @@ void PrintBufferAll(){
       PrintRoutine(p, index);
       /*
       if(index >= 10){
-	if(p -> blkno >= 10){
-	  printf("[%d : %d ", index, p -> blkno);
-	}
-	else{
-	  printf("[%d :  %d ", index, p -> blkno);
-	}
+        if(p -> blkno >= 10){
+          printf("[%d : %d ", index, p -> blkno);
+        }
+        else{
+          printf("[%d :  %d ", index, p -> blkno);
+        }
       }
       else{
-	if(p -> blkno >= 10){
-	  printf("[ %d : %d ", index, p -> blkno);
-	}
-	else{
-	  printf("[ %d :  %d ", index, p -> blkno);
-	}
+        if(p -> blkno >= 10){
+          printf("[ %d : %d ", index, p -> blkno);
+        }
+        else{
+          printf("[ %d :  %d ", index, p -> blkno);
+        }
       }
       */
       PrintState(p);
       printf("]\n");
-      index++; 
+      index++;
     }
   }
 }
@@ -587,14 +590,14 @@ void PrintHashAll(){
       PrintRoutine(p, index);
       PrintState(p);
       printf("]");
-      index++; 
+      index++;
     }
     printf("\n");
   }
 }
 
 void PrintFree(){
-  int index = 0; 
+  int index = 0;
   for(buf *p = f_head.free_fp; p != &f_head; p = p -> free_fp){
     index = SearchNum(p -> blkno);
     PrintRoutine(p, index);
@@ -607,12 +610,12 @@ void PrintFree(){
 
 int SearchNum(int blkno){
   buf *buffer = Search(blkno);
-  int index = 0; 
+  int index = 0;
   for(int i = 0; i < NHASH; i++){
     for(buf *p = h_head[i].hash_fp; p != &h_head[i]; p = p -> hash_fp){
       if(p == buffer) return index;
-      index++; 
-    }    
+      index++;
+    }
   }
   return index;
 }
@@ -674,20 +677,20 @@ void PrintRoutine(buf *p, int index){
     }
     else{
       if(p -> blkno >= 10){
-	printf("[%d :  %d ", index, p -> blkno);
+        printf("[%d :  %d ", index, p -> blkno);
       }
       else{
-	printf("[%d :   %d ", index, p -> blkno);
+        printf("[%d :   %d ", index, p -> blkno);
       }
     }
   }
   else{
     if(p -> blkno >= 10){
       if(p -> blkno >= 100){
-	printf("[ %d : %d ", index, p -> blkno);
+        printf("[ %d : %d ", index, p -> blkno);
       }
       else{
-	printf("[ %d :  %d ", index, p -> blkno);
+        printf("[ %d :  %d ", index, p -> blkno);
       }
     }
     else{
@@ -705,8 +708,7 @@ buf *Clone(int blkno){
     }
   }
   if(p == NULL){
-    printf("Invalid block number, There is no such block number in cache\n"); 
+    printf("Invalid block number, There is no such block number in cache\n");
   }
   return NULL;
 }
-  
