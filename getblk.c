@@ -5,28 +5,14 @@
 #include "buf.h"
 #include "dlist.h"
 #include "state.h"
-//============================
-/*
-void brelse(buf *buffer);
-buf *Search(int blkno);
-int IsStatus(buf *buffer, int state);
-void AddStatus(buf *buffer, int state);
-void RemFromFreeList(buf *buf);
-buf *GetBufFromFreeList(buf *F_LIST);
-void AddToHash(buf *elem);
 
-int IsInFreeList(buf *buffer);
-int CheckStatus(buf *buffer, int state);
-void RemStatus(buf *buffer, int state);
-void MakeStatus(buf *buffer, int state);
-*/
-//============================
-buf *getblk(int blknum) {
-  while (&h_head[blknum % 4] != NULL) {
-    buf *buffer = Search(blknum);
+buf* getblk(int blk_num) {
+  int hash_key = blk_num % 4;
+  while (&h_head[hash_key] != NULL) {
+    buf *buffer = Search(blk_num);
     if (buffer != NULL) {
       assert(buffer != NULL);
-      if (IsStatus(buffer, STAT_LOCKED)) {
+      if (isStatus(buffer, STAT_LOCKED)) {
         // sleep();
         printf("SCENARIO 5\n");
         printf("Process goes to sleep\n");
@@ -34,27 +20,23 @@ buf *getblk(int blknum) {
         return NULL;
         continue;
       }
-      // scenario 1
       printf("SCENARIO 1\n");
       MakeStatus(buffer, (STAT_LOCKED | STAT_VALID));
       RemFromFreeList(buffer);
       return buffer;
     } else {
-      // if(IsInFreeList(buffer)){
       if (IsEmptyFree()) {
-        // scenario 4
         // sleep();
         printf("SCENARIO 4\n");
         printf("Process goes to sleep\n");
         brelse(buffer);
         continue;
       }
-      // RemFromFreeList(buffer);
-      // RemoveFromFree()
+
       buf *ref = ref_free_head();
       if (CheckStatus(ref, STAT_DWR)) {
         // scenario 3
-        printf("SCENARIO 3\n");  // asynchronous write buffer to disk;
+        printf("SCENARIO 3\n");
         buf *prev = ref->free_bp;
         buf *next = ref->free_fp;
         prev->free_fp = next;
@@ -66,7 +48,7 @@ buf *getblk(int blknum) {
       printf("SCENARIO 2\n");
       buf *additionalbuf = remove_free_head();
       RemStatus(additionalbuf, STAT_VALID);
-      additionalbuf->blkno = blknum;
+      additionalbuf->blkno = blk_num;
       AddToHash(additionalbuf);
       printf("Kernel HDD access occuring\n");
       AddStatus(additionalbuf, STAT_KRDWR);
@@ -99,35 +81,19 @@ void brelse(buf *buffer) {
   // lower_cpu_level();
 }
 
-// based on the blkno, search the hash key, and
-// if there exist the value in the hash list, return
-// the buffer that contains blkno, return NULL otherwise
 buf *Search(int num) {
-  int hkey = num % 4;
+  int hash_key = num % 4;
   buf *p;
-  for (p = h_head[hkey].hash_fp; p != &h_head[hkey]; p = p->hash_fp) {
-    if (p->blkno == num) {
-      return p;
-    }
-  }
+  for (p = h_head[hash_key].hash_fp; p != &h_head[hash_key]; p = p->hash_fp)
+    if (p->blkno == num) return p;
+
   return NULL;
 }
 
-//
-// int IsInHash(int blkno){
-//
-//}
-
-// check wheather buffer is locked or not
-// take & with STAT_LOCKED and see the bit level operation
-int IsStatus(buf *buffer, int state) { return (buffer->stat & state); }
+int isStatus(buf *buffer, int state) { return (buffer->stat & state); }
 void AddStatus(buf *buffer, int state) {
   buffer->stat = (buffer->stat) | state;
 }
-//// add STAT_LOCKED to the status of buffer
-// void Lock(buf *buffer){
-//  buffer -> stat | STAT_LOCKED;
-//}
 
 void RemFromFreeList(buf *buffer) {
   buf *prev = buffer->free_bp;
@@ -136,16 +102,6 @@ void RemFromFreeList(buf *buffer) {
   next->free_bp = prev;
   buffer->free_fp = NULL;
   buffer->free_bp = NULL;
-}
-
-buf *GetBufFromFreeList(buf *F_LIST) {
-  buf *buffer = F_LIST->free_fp;
-  if (!CheckStatus(buffer, STAT_DWR)) {
-    RemFromFreeList(buffer);
-    return buffer;
-  } else {
-    GetBufFromFreeList(buffer);
-  }
 }
 
 void AddToHash(buf *elem) {

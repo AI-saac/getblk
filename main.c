@@ -211,20 +211,7 @@ void init_proc(int ac, char *av[]) {
     insert_list(h_head[i].hash_fp, q, HASHHEAD);
     insert_list(((h_head[i].hash_fp)->hash_fp), r, HASHHEAD);
   }
-  /*
-  buf *freebuffer = malloc(sizeof(buf));
-  //f_head.free_fp
-  freebuffer -> free_fp = freebuffer;
-  freebuffer -> free_bp = freebuffer;
-  freebuffer -> hash_fp = NULL;
-  freebuffer -> hash_bp = NULL;
-  freebuffer -> stat = 0;
-  freebuffer -> cache_data = NULL;
-  //f_head = *freebuffer;
-  //f_head = freebuffer;
-  //adding buffers
-  //mod = 0
-  */
+
   f_head.free_fp = &f_head;
   f_head.free_bp = &f_head;
   buf *trac = h_head[0].hash_fp;
@@ -269,20 +256,7 @@ void init_proc(int ac, char *av[]) {
 
   // adding freelist
   trac = &f_head;
-  // trac -> free_fp = NULL;
-  /*
-  insert_list(trac, h_head[3].hash_fp, FREEHEAD);
-  trac = trac -> free_fp;
-  insert_list(trac, (h_head[1].hash_fp) -> hash_fp, FREEHEAD);
-  trac = trac -> free_fp;
-  insert_list(trac, (h_head[0].hash_fp) -> hash_fp, FREEHEAD);
-  trac = trac -> free_fp;
-  insert_list(trac, h_head[0].hash_fp, FREEHEAD);
-  trac = trac -> free_fp;
-  insert_list(trac, (h_head[1].hash_fp) -> hash_fp -> hash_fp, FREEHEAD);
-  trac = trac -> free_fp;
-  insert_list(trac, (h_head[2].hash_fp) -> hash_fp -> hash_fp, FREEHEAD);
-  */
+
   insert_list(trac, h_head[3].hash_fp, FREETAIL);
   insert_list(trac, h_head[1].hash_fp->hash_fp, FREETAIL);
   insert_list(trac, h_head[0].hash_fp->hash_fp, FREETAIL);

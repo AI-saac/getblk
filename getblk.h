@@ -7,13 +7,12 @@
 //#include "dlist.h"
 //#include "state.h"
 
-buf *getblk(int blknum);
+buf *getblk(int blk_num);
 void brelse(buf *buffer);
 buf *Search(int blkno);
-int IsStatus(buf *buffer, int state);
+int isStatus(buf *buffer, int state);
 void AddStatus(buf *buffer, int state);
 void RemFromFreeList(buf *buf);
-buf *GetBufFromFreeList(buf *F_LIST);
 void AddToHash(buf *elem);
 int IsInFreeList(buf *buffer);
 int CheckStatus(buf *buffer, int state);
