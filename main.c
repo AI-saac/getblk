@@ -104,7 +104,6 @@ int parseline(char *cmdline, char **av) {
   while (*buffer && (*buffer == ' ')) {  // ignore leading space
     buffer++;
   }
-  argc = 0;
 
   delim = strchr(buffer, ' ');
 

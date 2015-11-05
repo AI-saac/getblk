@@ -14,20 +14,20 @@ buf* getblk(int blk_num) {
       assert(buffer != NULL);
       if (isStatus(buffer, STAT_LOCKED)) {
         // sleep();
-        printf("SCENARIO 5\n");
+        printf("=== Scenario 5===\n");
         printf("Process goes to sleep\n");
         AddStatus(buffer, STAT_WAITED);
         return NULL;
         continue;
       }
-      printf("SCENARIO 1\n");
+      printf("=== Scenario 1===\n");
       MakeStatus(buffer, (STAT_LOCKED | STAT_VALID));
       RemFromFreeList(buffer);
       return buffer;
     } else {
       if (IsEmptyFree()) {
         // sleep();
-        printf("SCENARIO 4\n");
+        printf("=== Scenario 4===\n");
         printf("Process goes to sleep\n");
         brelse(buffer);
         continue;
@@ -36,7 +36,7 @@ buf* getblk(int blk_num) {
       buf *ref = ref_free_head();
       if (CheckStatus(ref, STAT_DWR)) {
         // scenario 3
-        printf("SCENARIO 3\n");
+        printf("=== Scenario 3===\n");
         buf *prev = ref->free_bp;
         buf *next = ref->free_fp;
         prev->free_fp = next;
@@ -45,7 +45,7 @@ buf* getblk(int blk_num) {
         continue;
       }
       // scenario 2
-      printf("SCENARIO 2\n");
+      printf("=== Scenario 2===\n");
       buf *additionalbuf = remove_free_head();
       RemStatus(additionalbuf, STAT_VALID);
       additionalbuf->blkno = blk_num;
